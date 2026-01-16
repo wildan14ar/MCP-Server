@@ -2,7 +2,9 @@ import logging
 import os
 
 from mcp.server.fastmcp import FastMCP
-from src.tools.excel import excel_tools
+from src.modules.excel.tools import excel_tools
+from src.modules.server.tools import register_server_tools
+from src.modules.server.routes import router as server_router
 
 # Get project root directory path for log file path.
 # When using the stdio transmission method,
@@ -64,6 +66,12 @@ def get_excel_path(filename: str) -> str:
 
 # Register all routes
 excel_tools(mcp, get_excel_path)
+
+# Register server tools (MCP tools)
+register_server_tools(mcp)
+
+# Register server routes (FastAPI router)
+mcp.app.include_router(server_router)
 
 
 def run_sse():

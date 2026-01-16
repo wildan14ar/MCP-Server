@@ -1,8 +1,52 @@
-# Excel MCP Server Tools
+# Excel MCP Module - Complete Documentation
 
-This document provides detailed information about all available tools in the Excel MCP server.
+## 📊 Overview
 
-## Workbook Operations
+The Excel module provides comprehensive Excel file manipulation capabilities through MCP (Model Context Protocol). Built with a modular architecture for maintainability and scalability.
+
+## 🏗️ Module Structure
+
+```
+modules/excel/
+├── operations/          # Core Excel operations (12 files)
+│   ├── workbook.py     # Workbook management
+│   ├── sheet.py        # Sheet operations
+│   ├── data.py         # Data read/write
+│   ├── formatting.py   # Cell formatting
+│   ├── calculations.py # Formulas & calculations
+│   ├── chart.py        # Chart creation
+│   ├── tables.py       # Excel table operations
+│   ├── pivot.py        # Pivot table creation
+│   ├── validation.py   # Data validation
+│   ├── cell_utils.py   # Cell utilities
+│   ├── cell_validation.py  # Validation helpers
+│   └── exceptions.py   # Custom exceptions
+├── tools/
+│   └── excel.py        # MCP tool registration
+└── routes/
+    └── excel.py        # FastAPI endpoints (optional)
+```
+
+## 🚀 Quick Start
+
+### Import and Use
+
+```python
+# Register MCP tools
+from src.modules.excel.tools import excel_tools
+excel_tools(mcp, get_excel_path)
+
+# Direct operations
+from src.modules.excel.operations import workbook, sheet, data
+
+workbook.create_workbook("report.xlsx")
+sheet.create_sheet("report.xlsx", "Sales")
+data.write_data("report.xlsx", "Sales", [[1, 2, 3]], "A1")
+```
+
+## 📚 Available MCP Tools
+
+### Workbook Operations
 
 ### create_workbook
 
@@ -434,6 +478,323 @@ insert_columns(
 - `count`: Number of columns to insert (default: 1)
 - Returns: Success message
 
+---
+
+## 💡 Usage Examples
+
+### Example 1: Create Report with Formatting
+
+```python
+from src.modules.excel.operations import workbook, sheet, data, formatting
+
+# Create workbook
+workbook.create_workbook("sales_report.xlsx")
+sheet.create_sheet("sales_report.xlsx", "Q1 Sales")
+
+# Write header
+data.write_data(
+    "sales_report.xlsx",
+    "Q1 Sales",
+    [["Product", "Sales", "Revenue"]],
+    "A1"
+)
+
+# Format header
+formatting.format_range(
+    "sales_report.xlsx",
+    "Q1 Sales",
+    "A1",
+    "C1",
+    bold=True,
+    bg_color="4472C4",
+    font_color="FFFFFF"
+)
+
+# Write data
+data.write_data(
+    "sales_report.xlsx",
+    "Q1 Sales",
+    [
+        ["Widget A", 100, 5000],
+        ["Widget B", 150, 7500],
+        ["Widget C", 200, 10000]
+    ],
+    "A2"
+)
+```
+
+### Example 2: Create Chart from Data
+
+```python
+from src.modules.excel.operations import chart
+
+# Create line chart
+chart.create_chart(
+    "sales_report.xlsx",
+    "Q1 Sales",
+    data_range="A1:C4",
+    chart_type="line",
+    target_cell="E2",
+    title="Q1 Sales Trend",
+    x_axis="Products",
+    y_axis="Revenue"
+)
+```
+
+### Example 3: Create Pivot Table
+
+```python
+from src.modules.excel.operations import pivot
+
+# Create pivot table
+pivot.create_pivot_table(
+    "sales_report.xlsx",
+    "Q1 Sales",
+    data_range="A1:C4",
+    target_cell="F2",
+    rows=["Product"],
+    values=["Revenue"],
+    agg_func="sum"
+)
+```
+
+### Example 4: Data Validation
+
+```python
+from src.modules.excel.operations import validation
+
+# Add dropdown validation
+validation.add_data_validation(
+    "sales_report.xlsx",
+    "Q1 Sales",
+    "D2:D10",
+    validation_type="list",
+    formula="Approved,Pending,Rejected"
+)
+```
+
+---
+
+## 🔧 Advanced Features
+
+### Custom Exceptions
+
+```python
+from src.modules.excel.operations.exceptions import (
+    ValidationError,
+    WorkbookError,
+    SheetError,
+    DataError,
+    FormattingError
+)
+
+try:
+    workbook.create_workbook("existing.xlsx")
+except WorkbookError as e:
+    print(f"Workbook error: {e}")
+```
+
+### Cell Utilities
+
+```python
+from src.modules.excel.operations import cell_utils
+
+# Convert cell reference
+col_letter = cell_utils.column_index_to_letter(1)  # 'A'
+col_index = cell_utils.column_letter_to_index('A')  # 1
+
+# Validate cell reference
+is_valid = cell_utils.is_valid_cell_reference('A1')  # True
+```
+
+---
+
+## 📊 Supported Chart Types
+
+| Type | Description |
+|------|-------------|
+| `line` | Line chart for trends |
+| `bar` | Vertical bar chart |
+| `column` | Horizontal bar chart |
+| `pie` | Pie chart for proportions |
+| `scatter` | Scatter plot for correlation |
+| `area` | Area chart for cumulative data |
+
+---
+
+## 🎨 Supported Table Styles
+
+- `TableStyleLight1` through `TableStyleLight21`
+- `TableStyleMedium1` through `TableStyleMedium28`
+- `TableStyleDark1` through `TableStyleDark11`
+
+---
+
+## ⚙️ Configuration
+
+### File Path Resolution
+
+When using **SSE or Streamable HTTP**:
+
+```bash
+# Set base path for Excel files
+export EXCEL_FILES_PATH="/path/to/excel/files"
+
+# Relative paths will be resolved from this base
+workbook.create_workbook("report.xlsx")  # Creates /path/to/excel/files/report.xlsx
+```
+
+When using **Stdio**:
+
+```python
+# Absolute paths required
+workbook.create_workbook("/full/path/to/report.xlsx")
+```
+
+---
+
+## 🔐 Best Practices
+
+### 1. Error Handling
+
+```python
+from src.modules.excel.operations import workbook
+from src.modules.excel.operations.exceptions import WorkbookError
+
+try:
+    workbook.create_workbook("report.xlsx")
+except WorkbookError as e:
+    print(f"Failed to create workbook: {e}")
+```
+
+### 2. Validate Before Operations
+
+```python
+from src.modules.excel.operations import validation
+
+# Validate range before writing
+result = validation.validate_excel_range(
+    "report.xlsx",
+    "Sheet1",
+    "A1",
+    "Z100"
+)
+```
+
+### 3. Use Named Ranges
+
+```python
+# Define named range for reusability
+data.write_data("report.xlsx", "Sheet1", data, "SalesData")
+```
+
+### 4. Batch Operations
+
+```python
+# Batch multiple writes
+data_rows = [
+    ["Header1", "Header2", "Header3"],
+    ["Data1", "Data2", "Data3"],
+    ["Data4", "Data5", "Data6"]
+]
+
+data.write_data("report.xlsx", "Sheet1", data_rows, "A1")
+```
+
+---
+
+## 🧪 Testing
+
+### Unit Tests
+
+```python
+import pytest
+from src.modules.excel.operations import workbook
+
+def test_create_workbook():
+    result = workbook.create_workbook("test.xlsx")
+    assert "successfully" in result.lower()
+```
+
+### Integration Tests
+
+```python
+def test_full_workflow():
+    # Create
+    workbook.create_workbook("test.xlsx")
+    sheet.create_sheet("test.xlsx", "Data")
+    
+    # Write
+    data.write_data("test.xlsx", "Data", [[1, 2, 3]], "A1")
+    
+    # Read
+    result = data.read_data_from_excel("test.xlsx", "Data", "A1", "C1")
+    
+    # Verify
+    assert "1" in result and "2" in result and "3" in result
+```
+
+---
+
+## 📖 API Reference
+
+For complete API documentation, see the module source code:
+
+- **Operations**: `src/modules/excel/operations/`
+- **Tools**: `src/modules/excel/tools/excel.py`
+- **Routes**: `src/modules/excel/routes/excel.py`
+
+---
+
+## 🔗 Related Documentation
+
+- [Server Module Documentation](SERVER.md)
+- [Modular Architecture](MODULAR_STRUCTURE.md)
+- [Main README](../README.md)
+
+---
+
+## 🆘 Troubleshooting
+
+### Common Issues
+
+**Issue**: File not found error
+
+```python
+# Solution: Use absolute path or set EXCEL_FILES_PATH
+export EXCEL_FILES_PATH="/path/to/files"
+```
+
+**Issue**: Permission denied
+
+```python
+# Solution: Check file permissions
+chmod 644 report.xlsx
+```
+
+**Issue**: Invalid cell reference
+
+```python
+# Solution: Validate cell reference
+from src.modules.excel.operations import cell_utils
+is_valid = cell_utils.is_valid_cell_reference('A1')
+```
+
+---
+
+## 📝 Changelog
+
+### Version 2.0 - Modular Architecture
+- ✅ Reorganized into modular structure
+- ✅ Separated operations, tools, and routes
+- ✅ Improved error handling with custom exceptions
+- ✅ Enhanced documentation
+
+### Version 1.0 - Initial Release
+- ✅ Basic Excel operations
+- ✅ MCP tool integration
+- ✅ Support for formulas and charts
+
 ### delete_sheet_rows
 
 Delete one or more rows starting at the specified row.
@@ -471,3 +832,4 @@ delete_sheet_columns(
 - `start_col`: Column number where to start deleting (1-based)
 - `count`: Number of columns to delete (default: 1)
 - Returns: Success message
+

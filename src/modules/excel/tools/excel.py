@@ -2,7 +2,7 @@ import logging
 from typing import Any, List, Dict, Optional
 
 # Import exceptions
-from src.excel.exceptions import (
+from ..operations.exceptions import (
     ValidationError,
     WorkbookError,
     SheetError,
@@ -14,16 +14,16 @@ from src.excel.exceptions import (
 )
 
 # Import from src.excel package with consistent _impl suffixes
-from src.excel.validation import (
+from ..operations.validation import (
     validate_formula_in_cell_operation as validate_formula_impl,
     validate_range_in_sheet_operation as validate_range_impl
 )
-from src.excel.chart import create_chart_in_sheet as create_chart_impl
-from src.excel.workbook import get_workbook_info
-from src.excel.data import write_data
-from src.excel.pivot import create_pivot_table as create_pivot_table_impl
-from src.excel.tables import create_excel_table as create_table_impl
-from src.excel.sheet import (
+from ..operations.chart import create_chart_in_sheet as create_chart_impl
+from ..operations.workbook import get_workbook_info
+from ..operations.data import write_data
+from ..operations.pivot import create_pivot_table as create_pivot_table_impl
+from ..operations.tables import create_excel_table as create_table_impl
+from ..operations.sheet import (
     copy_sheet,
     delete_sheet,
     rename_sheet,
@@ -60,7 +60,7 @@ def excel_tools(mcp, get_excel_path):
                 return f"Error: {validation['error']}"
                 
             # If valid, apply the formula
-            from src.excel.calculations import apply_formula as apply_formula_impl
+            from ..operations.calculations import apply_formula as apply_formula_impl
             result = apply_formula_impl(full_path, sheet_name, cell, formula)
             return result["message"]
         except (ValidationError, CalculationError) as e:
@@ -111,7 +111,7 @@ def excel_tools(mcp, get_excel_path):
         """Apply formatting to a range of cells."""
         try:
             full_path = get_excel_path(filepath)
-            from src.excel.formatting import format_range as format_range_func
+            from ..operations.formatting import format_range as format_range_func
             
             # Convert None values to appropriate defaults for the underlying function
             format_range_func(
@@ -165,7 +165,7 @@ def excel_tools(mcp, get_excel_path):
         """
         try:
             full_path = get_excel_path(filepath)
-            from src.excel.data import read_excel_range_with_metadata
+            from ..operations.data import read_excel_range_with_metadata
             result = read_excel_range_with_metadata(
                 full_path, 
                 sheet_name, 
@@ -216,7 +216,7 @@ def excel_tools(mcp, get_excel_path):
         """Create new Excel workbook."""
         try:
             full_path = get_excel_path(filepath)
-            from src.excel.workbook import create_workbook as create_workbook_impl
+            from ..operations.workbook import create_workbook as create_workbook_impl
             create_workbook_impl(full_path)
             return f"Created workbook at {full_path}"
         except WorkbookError as e:
@@ -230,7 +230,7 @@ def excel_tools(mcp, get_excel_path):
         """Create new worksheet in workbook."""
         try:
             full_path = get_excel_path(filepath)
-            from src.excel.workbook import create_sheet as create_worksheet_impl
+            from ..operations.workbook import create_sheet as create_worksheet_impl
             result = create_worksheet_impl(full_path, sheet_name)
             return result["message"]
         except (ValidationError, WorkbookError) as e:
@@ -440,7 +440,7 @@ def excel_tools(mcp, get_excel_path):
         """Copy a range of cells to another location."""
         try:
             full_path = get_excel_path(filepath)
-            from src.excel.sheet import copy_range_operation
+            from ..operations.sheet import copy_range_operation
             result = copy_range_operation(
                 full_path,
                 sheet_name,
@@ -467,7 +467,7 @@ def excel_tools(mcp, get_excel_path):
         """Delete a range of cells and shift remaining cells."""
         try:
             full_path = get_excel_path(filepath)
-            from src.excel.sheet import delete_range_operation
+            from ..operations.sheet import delete_range_operation
             result = delete_range_operation(
                 full_path,
                 sheet_name,
@@ -522,7 +522,7 @@ def excel_tools(mcp, get_excel_path):
         try:
             full_path = get_excel_path(filepath)
             from openpyxl import load_workbook
-            from src.excel.cell_validation import get_all_validation_ranges
+            from ..operations.cell_validation import get_all_validation_ranges
             
             wb = load_workbook(full_path, read_only=False)
             if sheet_name not in wb.sheetnames:
