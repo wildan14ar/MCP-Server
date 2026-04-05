@@ -1,32 +1,44 @@
 """
-Main Server - Remctl MCP Server
+Main Server - MCP Server with Modular Routes
 
 Run with:
     python -m src.server
 
 Endpoints:
-- WebSocket: ws://localhost:8017/remctl/ws
-- MCP:       POST http://localhost:8017/remctl/mcp
+- Remctl:
+    WebSocket: ws://localhost:8017/remctl/ws
+    MCP:       http://localhost:8017/remctl/mcp
+
+- Database:
+    WebSocket: ws://localhost:8017/database/ws
+    MCP:       http://localhost:8017/database/mcp
 """
 
 from fastapi import FastAPI
 import uvicorn
 
-from src.modules.remctl import remctl_router
+from src.routes import setup_remctl, setup_database
 
 
 def main():
-    """Create and run Remctl MCP Server."""
+    """Create and run MCP Server."""
 
     # Create FastAPI app
-    app = FastAPI(title="Remctl MCP Server", version="1.0.0")
-    app.include_router(remctl_router)
+    app = FastAPI(title="MCP Server", version="1.0.0")
+    
+    # Setup routes
+    setup_remctl(app)
+    setup_database(app)
 
-    print("🚀 Remctl MCP Server")
+    print("🚀 MCP Server")
     print()
-    print("Endpoints:")
+    print("Remctl:")
     print("  WebSocket: ws://localhost:8017/remctl/ws")
-    print("  MCP:       POST http://localhost:8017/remctl/mcp")
+    print("  MCP:       http://localhost:8017/remctl/mcp")
+    print()
+    print("Database:")
+    print("  WebSocket: ws://localhost:8017/database/ws")
+    print("  MCP:       http://localhost:8017/database/mcp")
     print()
     print("Starting server on http://localhost:8017")
     print()

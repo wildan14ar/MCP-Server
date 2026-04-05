@@ -1,170 +1,165 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/haris-musa/excel-mcp-server/main/assets/logo.png" alt="Excel MCP Server Logo" width="300"/>
+  <img src="https://raw.githubusercontent.com/haris-musa/excel-mcp-server/main/assets/logo.png" alt="MCP Server Logo" width="300"/>
 </p>
 
-[![PyPI version](https://img.shields.io/pypi/v/excel-mcp-server.svg)](https://pypi.org/project/excel-mcp-server/)
-[![Total Downloads](https://static.pepy.tech/badge/excel-mcp-server)](https://pepy.tech/project/excel-mcp-server)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![smithery badge](https://smithery.ai/badge/@haris-musa/excel-mcp-server)](https://smithery.ai/server/@haris-musa/excel-mcp-server)
 
 # MCP Server - Modular Architecture
 
 A **Model Context Protocol (MCP)** server with modular architecture supporting:
-- 📊 **Excel Operations** - Manipulate Excel files without Microsoft Excel
-- 🖥️ **SSH Server Management** - Remote server operations via WebSocket + MCP tools
+- 🖥️ **SSH Server Management (Remctl)** - Remote server operations via WebSocket + MCP tools with approval system
+- 🗄️ **Database Management** - Multi-database operations (PostgreSQL, MySQL, SQLite, MSSQL, Oracle) with approval system
 
 ## 🏗️ Architecture Overview
 
 ```
 src/
+├── routes/                        # Central route registration
+│   ├── remctl.py                 # Remctl WebSocket + MCP routes
+│   └── database.py               # Database WebSocket + MCP routes
 ├── modules/
-│   ├── excel/              # 📊 Excel Module
-│   │   ├── operations/     # Core Excel operations (12 files)
-│   │   ├── tools/          # MCP tool registration
-│   │   └── routes/         # FastAPI endpoints
-│   └── server/             # 🖥️ Server Module
-│       ├── config/         # SSH session & WebSocket
-│       ├── tools/          # MCP tools (25+ operations)
-│       └── routes/         # FastAPI endpoints
-└── server.py               # Main entry point
+│   ├── remctl/                   # 🖥️ Remote Control Module
+│   │   ├── config/               # Session management & tools registry
+│   │   ├── tools/                # MCP tools (core, filesystem, system)
+│   │   └── skills/               # Skill documentation (markdown files)
+│   ├── database/                 # 🗄️ Database Module
+│   │   ├── config/               # Connection management & tools registry
+│   │   ├── tools/                # MCP tools (core, schema, admin)
+│   │   └── skills/               # Skill documentation (markdown files)
+│   └── approval/                 # 🔐 Command approval system
+│       └── manager.py            # User approval management
+└── server.py                     # Main entry point
 ```
 
 ### Modular Design Benefits
 
-- ✅ **Independent Modules** - Excel and Server operate independently
-- ✅ **Scalable** - Easy to add new modules (database, storage, etc.)
+- ✅ **Independent Modules** - Remctl and Database operate independently
+- ✅ **Approval System** - All AI actions require user approval before execution
+- ✅ **Scalable** - Easy to add new modules (storage, APIs, etc.)
 - ✅ **Maintainable** - Changes isolated to specific modules
 - ✅ **Reusable** - Modules can import from each other
-- ✅ **Clean Separation** - Clear responsibility boundaries
+- ✅ **Clean Separation** - Routes in `src/routes/`, logic in `src/modules/`
 
-## 📊 Module 1: Excel
+## 🔐 Security Model
 
-### Features
+### User vs AI Roles
 
-- 📈 **Data Manipulation**: Formulas, formatting, charts, pivot tables
-- 🔍 **Data Validation**: Built-in validation for ranges and formulas
-- 🎨 **Formatting**: Font styling, colors, borders, alignment
-- 📋 **Table Operations**: Create and manage Excel tables
-- 📊 **Chart Creation**: Line, bar, pie, scatter charts
-- 🔄 **Pivot Tables**: Dynamic pivot tables for analysis
-- 🔧 **Sheet Management**: Copy, rename, delete worksheets
+**User (via WebSocket):**
+- ✅ Creates sessions with credentials
+- ✅ Receives approval requests
+- ✅ Approves/rejects AI actions
+- ✅ Full control over what AI can do
 
-### Quick Start
+**AI (via MCP Tools):**
+- ✅ Uses existing sessions (cannot create new ones)
+- ❌ Cannot access credentials
+- ✅ Must request approval for dangerous operations
+- ✅ Read-only tools don't need approval
 
-```python
-from src.modules.excel.tools import excel_tools
-from src.modules.excel.operations import workbook, sheet, data
+### Approval Flow
 
-# Register MCP tools
-excel_tools(mcp, get_excel_path)
-
-# Direct operations
-workbook.create_workbook("report.xlsx")
-sheet.create_sheet("report.xlsx", "Sales")
-data.write_data("report.xlsx", "Sales", [[1, 2, 3]], "A1")
+```
+AI calls tool → Server creates approval request → User receives notification
+     ↓
+User approves/rejects → Server executes (or cancels) → AI gets result
 ```
 
-### Available Operations (12)
-
-| Operation | Description |
-|-----------|-------------|
-| `workbook` | Create, open, save workbooks |
-| `sheet` | Sheet management (create, delete, copy) |
-| `data` | Read/write data |
-| `formatting` | Cell and range formatting |
-| `calculations` | Formulas and calculations |
-| `chart` | Chart creation |
-| `tables` | Excel table operations |
-| `pivot` | Pivot table creation |
-| `validation` | Data validation |
-| `cell_utils` | Cell utility functions |
-| `cell_validation` | Cell validation helpers |
-| `exceptions` | Custom exceptions |
-
-📖 **[Complete Excel Documentation →](docs/EXCEL.md)**
-
-## 🖥️ Module 2: Server
+## 🖥️ Module 1: Remctl (Server Management)
 
 ### Features
 
 - 🔐 **Token Authentication** - Secure token-based access
 - 🌐 **WebSocket Support** - Real-time bidirectional communication
-- 🛠️ **25+ MCP Tools** - Comprehensive server operations
-- ✅ **Command Confirmation** - Safety for dangerous operations
+- 🛠️ **29+ MCP Tools** - Comprehensive server operations
+- ✅ **User Approval System** - All actions require user approval
+- 📚 **Skill Documentation** - AI can learn available capabilities
 - 📊 **Session Management** - Multi-session support
-- 🔄 **State Consistency** - Shared state between WebSocket and MCP
 
 ### Architecture Flow
 
 ```
-┌─────────────────────────────────────────────────┐
-│  1. WebSocket Connect                           │
-│     ↓                                           │
-│  2. SSH Session Created + Token Generated       │
-│     ↓                                           │
-│  ┌──────────────────────────────────────┐      │
-│  │  DUAL ACCESS (Same Session):         │      │
-│  │                                       │      │
-│  │  A) WebSocket (Real-time)             │      │
-│  │     - Interactive commands            │      │
-│  │     - Live output streaming           │      │
-│  │                                       │      │
-│  │  B) MCP Tools (Token-based)           │      │
-│  │     - REST API with token             │      │
-│  │     - Execute in same session         │      │
-│  └──────────────────────────────────────┘      │
-│     ↓                                           │
-│  3. WebSocket Disconnect = Token Invalid        │
-└─────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│  1. User → WebSocket Connect (SSH credentials)          │
+│     ↓                                                    │
+│  2. SSH Session Created + Token Generated               │
+│     ↓                                                    │
+│  ┌──────────────────────────────────────────────┐      │
+│  │  DUAL ACCESS (Same Session):                 │      │
+│  │                                               │      │
+│  │  A) WebSocket (User - Interactive)           │      │
+│  │     - Real-time commands                     │      │
+│  │     - Approve/reject AI requests             │      │
+│  │                                               │      │
+│  │  B) MCP Tools (AI - Programmatic)            │      │
+│  │     - REST API with token                    │      │
+│  │     - Requires user approval first           │      │
+│  └──────────────────────────────────────────────┘      │
+│     ↓                                                    │
+│  3. WebSocket Disconnect = Token Invalid                │
+└─────────────────────────────────────────────────────────┘
 ```
 
-### Quick Start
+### Available Tools (29+)
 
-```python
-from src.modules.server.tools import register_server_tools
-from src.modules.server.routes import router
-from src.modules.server.config import SSHSession
+| Category | Tools | Count |
+|----------|-------|-------|
+| **Core** | server_exec (SSH command execution) | 1 |
+| **Filesystem** | server_ls, server_pwd, server_cd, server_mkdir, server_rm, server_cp, server_mv, server_cat, server_head, server_tail, server_file_info, server_find, server_grep | 13 |
+| **System** | server_whoami, server_hostname, server_uname, server_uptime, server_ps, server_top, server_df, server_free, server_du, server_network, server_ping, server_kill, server_killall, systemctl, server_logs | 15 |
 
-# Register MCP tools
-register_server_tools(mcp)
+📖 **[Complete Remctl Documentation →](docs/SERVER.md)**
 
-# Add routes
-app.include_router(router)
+## 🗄️ Module 2: Database
 
-# WebSocket: ws://localhost:8017/server/ws
-# REST API: POST /server/mcp/execute
-```
+### Features
 
-### Available Operations (25+)
+- 🌐 **Multi-Database Support** - PostgreSQL, MySQL, SQLite, MSSQL, Oracle
+- 🔐 **Token Authentication** - Secure token-based access
+- 🌐 **WebSocket Support** - Real-time bidirectional communication
+- 🛠️ **33+ MCP Tools** - Comprehensive database operations
+- ✅ **User Approval System** - All write operations require approval
+- 📚 **Skill Documentation** - AI can learn database patterns
+- 📊 **Connection Pooling** - Multiple concurrent connections
 
-| Category | Tools |
-|----------|-------|
-| **Basic Info** | whoami, pwd, hostname, uname |
-| **File Listing** | ls, tree |
-| **File Search** | find_files, grep_files, locate_file |
-| **File Operations** | cat_file, tail_file, head_file, file_info |
-| **System Info** | disk_usage, memory_usage, process_list, uptime_info |
-| **Network** | network_interfaces, ping_host |
-| **Core** | execute_ssh_command, test_ssh_connection |
+### Available Tools (33+)
 
-📖 **[Complete Server Documentation →](docs/SERVER.md)**
+| Category | Tools | Count |
+|----------|-------|-------|
+| **Query** | db_query, db_query_single, db_query_count, db_insert, db_update, db_delete | 6 |
+| **Schema (Read-Only, No Approval)** | db_tables, db_schema, db_columns, db_primary_key, db_foreign_keys, db_indexes, db_relationships, db_table_stats, db_column_types, db_search_tables | 10 |
+| **Transaction** | db_transaction_start, db_transaction_commit, db_transaction_rollback | 3 |
+| **Admin** | db_create_table, db_drop_table, db_add_column, db_drop_column, db_alter_column, db_create_index, db_drop_index, db_create_view, db_drop_view, db_truncate_table, db_rename_table, db_add_foreign_key | 12 |
+| **Utility** | db_clear_cache | 1 |
+
+### Supported Databases
+
+- ✅ **PostgreSQL** (port 5432)
+- ✅ **MySQL** (port 3306)
+- ✅ **SQLite** (file or in-memory)
+- ✅ **Microsoft SQL Server** (port 1433)
+- ✅ **Oracle** (port 1521)
+
+📖 **[Complete Database Documentation →](docs/DATABASE.md)**
 
 ## 🚀 Installation & Usage
 
 ### Prerequisites
 
 ```bash
-pip install fastmcp paramiko websockets openpyxl
+pip install -r requirements.txt
 ```
 
 ### Running the Server
 
 ```bash
-# Start server with both modules
+# Start server with all modules
 cd MCP-Server
-python -m src.server run_sse
+python -m src.server
 
 # Server runs on http://localhost:8017
+# Endpoints:
+#   Remctl:   ws://localhost:8017/remctl/ws   +   http://localhost:8017/remctl/mcp
+#   Database: ws://localhost:8017/database/ws +   http://localhost:8017/database/mcp
 ```
 
 ### Using with Claude Desktop
@@ -172,82 +167,39 @@ python -m src.server run_sse
 ```json
 {
   "mcpServers": {
-    "mcp-server": {
+    "remctl": {
       "command": "python",
-      "args": ["-m", "src.server", "run_sse"],
+      "args": ["-m", "src.server"],
       "cwd": "/path/to/MCP-Server",
       "env": {
-        "FASTMCP_PORT": "8017",
-        "EXCEL_FILES_PATH": "/path/to/excel_files"
+        "FASTMCP_PORT": "8017"
       }
     }
   }
 }
 ```
 
-## 📦 Module Integration Example
+## 📚 Skill System
 
-### Scenario: Generate Server Report in Excel
+Both modules support a **Skill System** that allows AI to discover and learn available capabilities:
 
-```python
-import asyncio
-import websockets
-import requests
-import json
-from src.modules.excel.operations import workbook, sheet, data
+### How It Works
 
-async def generate_server_report():
-    # 1. Connect to server via WebSocket
-    ws = await websockets.connect("ws://localhost:8017/server/ws")
-    
-    await ws.send(json.dumps({
-        "type": "connect",
-        "host": "server.com",
-        "user": "admin",
-        "password": "secret"
-    }))
-    
-    response = json.loads(await ws.recv())
-    token = response["token"]
-    
-    # 2. Get server info using MCP tools
-    headers = {"X-MCP-Token": token}
-    
-    disk = requests.post(
-        "http://localhost:8017/server/mcp/execute",
-        headers=headers,
-        json={"command": "df -h"}
-    ).json()
-    
-    memory = requests.post(
-        "http://localhost:8017/server/mcp/execute",
-        headers=headers,
-        json={"command": "free -h"}
-    ).json()
-    
-    # 3. Generate Excel report
-    workbook.create_workbook("server_report.xlsx")
-    sheet.create_sheet("server_report.xlsx", "System Info")
-    
-    data.write_data(
-        "server_report.xlsx",
-        "System Info",
-        [
-            ["Metric", "Value"],
-            ["Disk Usage", disk["stdout"]],
-            ["Memory Usage", memory["stdout"]]
-        ],
-        "A1"
-    )
-    
-    # 4. Disconnect
-    await ws.send(json.dumps({"type": "disconnect"}))
-    await ws.close()
-    
-    print("✅ Report generated: server_report.xlsx")
+1. AI calls `get_skills()` → Gets list of available skills
+2. AI calls `load_skill(skill_name)` → Loads markdown documentation
+3. AI learns how to use tools properly with best practices
 
-asyncio.run(generate_server_report())
-```
+### Available Skills
+
+**Remctl:**
+- `server-connect` - SSH connection management
+- `server-fileops` - File operations on remote servers
+- `server-monitor` - Server health monitoring
+
+**Database:**
+- `database-connect` - Database connection management
+- `database-query` - Query and schema exploration
+- `database-admin` - Database administration tasks
 
 ## 🔧 Configuration
 
@@ -257,30 +209,71 @@ asyncio.run(generate_server_report())
 |----------|-------------|---------|
 | `FASTMCP_HOST` | Server host | `0.0.0.0` |
 | `FASTMCP_PORT` | Server port | `8017` |
-| `EXCEL_FILES_PATH` | Excel files directory | `./excel_files` |
 
 ### Transport Methods
 
-1. **Stdio** (Local use)
+1. **SSE** (Server-Sent Events) - Default
    ```bash
-   python -m src.server stdio
+   python -m src.server
    ```
 
-2. **SSE** (Server-Sent Events)
-   ```bash
-   python -m src.server run_sse
-   ```
+2. **WebSocket** - Real-time interactive
+   - Remctl: `ws://localhost:8017/remctl/ws`
+   - Database: `ws://localhost:8017/database/ws`
 
-3. **Streamable HTTP** (Recommended for remote)
-   ```bash
-   python -m src.server streamable_http
-   ```
+## 📦 Module Integration Example
 
-## 📚 Documentation
+### Scenario: User Connects Database, AI Queries
 
-- **[Excel Module Documentation](docs/EXCEL.md)** - Complete Excel MCP tools reference
-- **[Server Module Documentation](docs/SERVER.md)** - Complete Server MCP tools reference
-- **[Modular Structure](docs/MODULAR_STRUCTURE.md)** - Architecture details
+```python
+import asyncio
+import websockets
+import json
+
+async def workflow():
+    # 1. User connects via WebSocket
+    ws = await websockets.connect("ws://localhost:8017/database/ws")
+    
+    await ws.send(json.dumps({
+        "type": "connect",
+        "db_type": "postgresql",
+        "host": "localhost",
+        "user": "admin",
+        "password": "secret",
+        "database": "mydb"
+    }))
+    
+    response = json.loads(await ws.recv())
+    token = response["token"]
+    connection_id = response["connection_id"]
+    
+    # 2. Share token with AI (via Claude Desktop config)
+    # AI now has access to the database session
+    
+    # 3. AI calls tools → User receives approval requests
+    # Example: AI calls db_query → User sees:
+    # {
+    #   "type": "approval_request",
+    #   "request_id": "req_abc123",
+    #   "tool": "db_query",
+    #   "params": {"query": "SELECT * FROM users LIMIT 10"}
+    # }
+    
+    # 4. User approves
+    await ws.send(json.dumps({
+        "type": "approve_command",
+        "request_id": "req_abc123",
+        "approved": True
+    }))
+    
+    # 5. AI gets result
+    # {... "rows": [...], "row_count": 10 ...}
+    
+    # 6. Disconnect
+    await ws.send(json.dumps({"type": "disconnect"}))
+
+asyncio.run(workflow())
+```
 
 ## 🤝 Contributing
 
@@ -288,17 +281,15 @@ Contributions are welcome! The modular structure makes it easy to add new module
 
 ```bash
 # Add a new module
-mkdir -p src/modules/database/{config,tools,routes,operations}
-touch src/modules/database/__init__.py
+mkdir -p src/modules/newmodule/{config,tools,skills}
 
-# Update modules/__init__.py
-__all__ = ["server", "excel", "database"]
+# Create route
+touch src/routes/newmodule.py
+
+# Register in src/routes/__init__.py
+from .newmodule import setup_newmodule
 ```
 
 ## 📄 License
 
 MIT License - see [LICENSE](LICENSE) for details.
-
-## ⭐ Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=haris-musa/excel-mcp-server&type=Date)](https://www.star-history.com/#haris-musa/excel-mcp-server&Date)
