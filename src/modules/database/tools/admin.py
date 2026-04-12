@@ -14,7 +14,7 @@ NOTE: All admin tools require user approval before execution.
 from typing import Optional, List, Dict, Any
 from ..config.connection import DatabaseConnection
 from ..config.tools import tool
-from ...approval import approval_manager
+from ...lib.gatekeeper import gatekeeper
 
 
 @tool(name="db_create_table")
@@ -29,10 +29,10 @@ async def create_table(
     Requires user approval before execution.
     """
     # Create approval request (broadcast to all connected users)
-    request = approval_manager.create_request("db_create_table", {"table_name": table_name, "columns": len(columns), "connection_id": connection_id})
+    request = gatekeeper.create_request("db_create_table", {"table_name": table_name, "columns": len(columns), "connection_id": connection_id})
 
     # Wait for approval
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -83,10 +83,10 @@ async def drop_table(
     query = f"DROP TABLE {exists_clause}{table_name}"
 
     # Create approval request
-    request = approval_manager.create_request("db_drop_table", {"table_name": table_name, "connection_id": connection_id})
+    request = gatekeeper.create_request("db_drop_table", {"table_name": table_name, "connection_id": connection_id})
 
     # Wait for approval
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -117,10 +117,10 @@ async def add_column(
     Requires user approval before execution.
     """
     # Create approval request
-    request = approval_manager.create_request("db_add_column", {"table_name": table_name, "column_name": column_name, "connection_id": connection_id})
+    request = gatekeeper.create_request("db_add_column", {"table_name": table_name, "column_name": column_name, "connection_id": connection_id})
 
     # Wait for approval
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -155,10 +155,10 @@ async def drop_column(
     Requires user approval before execution.
     """
     # Create approval request
-    request = approval_manager.create_request("db_drop_column", {"table_name": table_name, "column_name": column_name, "connection_id": connection_id})
+    request = gatekeeper.create_request("db_drop_column", {"table_name": table_name, "column_name": column_name, "connection_id": connection_id})
 
     # Wait for approval
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -195,10 +195,10 @@ async def alter_column(
     Requires user approval before execution.
     """
     # Create approval request
-    request = approval_manager.create_request("db_alter_column", {"table_name": table_name, "column_name": column_name, "connection_id": connection_id})
+    request = gatekeeper.create_request("db_alter_column", {"table_name": table_name, "column_name": column_name, "connection_id": connection_id})
 
     # Wait for approval
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -256,10 +256,10 @@ async def create_index(
     Requires user approval before execution.
     """
     # Create approval request
-    request = approval_manager.create_request("db_create_index", {"table_name": table_name, "index_name": index_name, "connection_id": connection_id})
+    request = gatekeeper.create_request("db_create_index", {"table_name": table_name, "index_name": index_name, "connection_id": connection_id})
 
     # Wait for approval
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -294,10 +294,10 @@ async def drop_index(
     Requires user approval before execution.
     """
     # Create approval request
-    request = approval_manager.create_request("db_drop_index", {"index_name": index_name, "connection_id": connection_id})
+    request = gatekeeper.create_request("db_drop_index", {"index_name": index_name, "connection_id": connection_id})
 
     # Wait for approval
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -339,10 +339,10 @@ async def create_view(
     Requires user approval before execution.
     """
     # Create approval request
-    request = approval_manager.create_request("db_create_view", {"view_name": view_name, "query": query, "connection_id": connection_id})
+    request = gatekeeper.create_request("db_create_view", {"view_name": view_name, "query": query, "connection_id": connection_id})
 
     # Wait for approval
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -372,10 +372,10 @@ async def drop_view(
     Requires user approval before execution.
     """
     # Create approval request
-    request = approval_manager.create_request("db_drop_view", {"view_name": view_name, "connection_id": connection_id})
+    request = gatekeeper.create_request("db_drop_view", {"view_name": view_name, "connection_id": connection_id})
 
     # Wait for approval
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -405,10 +405,10 @@ async def truncate_table(
     Requires user approval before execution.
     """
     # Create approval request
-    request = approval_manager.create_request("db_truncate_table", {"table_name": table_name, "connection_id": connection_id})
+    request = gatekeeper.create_request("db_truncate_table", {"table_name": table_name, "connection_id": connection_id})
 
     # Wait for approval
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -438,10 +438,10 @@ async def rename_table(
     Requires user approval before execution.
     """
     # Create approval request
-    request = approval_manager.create_request("db_rename_table", {"old_name": old_name, "new_name": new_name, "connection_id": connection_id})
+    request = gatekeeper.create_request("db_rename_table", {"old_name": old_name, "new_name": new_name, "connection_id": connection_id})
 
     # Wait for approval
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -475,10 +475,10 @@ async def add_foreign_key(
     Requires user approval before execution.
     """
     # Create approval request
-    request = approval_manager.create_request("db_add_foreign_key", {"table_name": table_name, "constraint_name": constraint_name, "connection_id": connection_id})
+    request = gatekeeper.create_request("db_add_foreign_key", {"table_name": table_name, "constraint_name": constraint_name, "connection_id": connection_id})
 
     # Wait for approval
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 

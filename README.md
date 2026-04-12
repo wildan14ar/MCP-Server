@@ -26,9 +26,9 @@ src/
 │   │   ├── config/               # Connection management & tools registry
 │   │   ├── tools/                # MCP tools (core, schema, admin)
 │   │   └── skills/               # Skill documentation (markdown files)
-│   └── approval/                 # 🔐 Command approval system
-│       └── manager.py            # User approval management
-└── server.py                     # Main entry point
+├── lib/                      # 📦 Shared Libraries
+│   └── gatekeeper.py         # 🔐 Command approval system
+└── server.py                 # Main entry point
 ```
 
 ### Modular Design Benefits

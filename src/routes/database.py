@@ -23,7 +23,8 @@ from mcp.server.fastmcp import FastMCP
 from src.modules.database.config.connection import DatabaseConnection
 from src.modules.database.config.tools import ToolsManager
 from src.modules.database.config.skills import SkillsManager
-from src.modules.approval import approval_manager, register_websocket, unregister_websocket
+from src.modules.database.tools.session_mgmt import register_session_tools
+from src.lib.gatekeeper import gatekeeper, register_websocket, unregister_websocket, store_credentials, remove_credentials
 
 # MCP instance
 mcp = FastMCP("database")
@@ -80,6 +81,12 @@ async def websocket_endpoint(websocket: WebSocket):
                     _token_to_connection[conn.token] = conn
                     _active_websockets[conn.token] = websocket
                     active_connection = conn
+
+                    # Store credentials for AI to use later (NO credentials sent via MCP)
+                    store_credentials(conn.token, "database", {
+                        "user": data.get("user"),
+                        "password": data.get("password"),
+                    })
 
                     await websocket.send_json(
                         {
@@ -232,9 +239,9 @@ async def websocket_endpoint(websocket: WebSocket):
                 reason = data.get("reason")
 
                 if approved:
-                    approval_manager.approve(request_id)
+                    gatekeeper.approve(request_id)
                 else:
-                    approval_manager.reject(request_id, reason or "User rejected the request")
+                    gatekeeper.reject(request_id, reason or "User rejected the request")
 
                 await websocket.send_json({
                     "type": "approval_response",
@@ -244,7 +251,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
             elif msg_type == "list_pending":
                 # User requests list of pending approvals
-                pending = approval_manager.list_pending()
+                pending = gatekeeper.list_pending()
                 await websocket.send_json({
                     "type": "pending_list",
                     "requests": pending,
@@ -262,6 +269,7 @@ async def websocket_endpoint(websocket: WebSocket):
             try:
                 _token_to_connection.pop(conn.token, None)
                 _active_websockets.pop(conn.token, None)
+                remove_credentials(conn.token)
                 conn.close()
             except Exception:
                 pass
@@ -278,6 +286,7 @@ def setup_database(app: FastAPI):
     # Register MCP tools (AI can only use existing sessions)
     ToolsManager().get_tools(mcp)
     SkillsManager().get_tools(mcp)
+    register_session_tools(mcp)
 
     # Mount MCP SSE at /database/mcp
     app.router.routes.append(Mount("/database/mcp", app=mcp.streamable_http_app()))

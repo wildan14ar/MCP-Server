@@ -17,7 +17,7 @@ Read-only tools (schema, tables, columns) do not require approval.
 from typing import Optional, List, Dict, Any
 from ..config.connection import DatabaseConnection
 from ..config.tools import tool
-from ...approval import approval_manager
+from ...lib.gatekeeper import gatekeeper
 
 
 @tool(name="db_query")
@@ -40,10 +40,10 @@ async def database_query(
         Query results with columns, rows, and metadata
     """
     # Create approval request (broadcast to all connected users)
-    request = approval_manager.create_request("db_query", {"query": query, "connection_id": connection_id})
+    request = gatekeeper.create_request("db_query", {"query": query, "connection_id": connection_id})
 
     # Wait for approval
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -75,10 +75,10 @@ async def query_single_row(
 
     Requires user approval before execution.
     """
-    request = approval_manager.create_request("db_query_single", {"query": query, "connection_id": connection_id})
+    request = gatekeeper.create_request("db_query_single", {"query": query, "connection_id": connection_id})
 
     # Wait for approval
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -109,10 +109,10 @@ async def query_row_count(
 
     Requires user approval before execution.
     """
-    request = approval_manager.create_request("db_query_count", {"query": query, "connection_id": connection_id})
+    request = gatekeeper.create_request("db_query_count", {"query": query, "connection_id": connection_id})
 
     # Wait for approval
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -137,10 +137,10 @@ async def transaction_start(
 
     Requires user approval before execution.
     """
-    request = approval_manager.create_request("db_transaction_start", {"connection_id": connection_id})
+    request = gatekeeper.create_request("db_transaction_start", {"connection_id": connection_id})
 
     # Wait for approval
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -174,10 +174,10 @@ async def transaction_commit(
 
     Requires user approval before execution.
     """
-    request = approval_manager.create_request("db_transaction_commit", {"connection_id": connection_id})
+    request = gatekeeper.create_request("db_transaction_commit", {"connection_id": connection_id})
 
     # Wait for approval
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -211,10 +211,10 @@ async def transaction_rollback(
 
     Requires user approval before execution.
     """
-    request = approval_manager.create_request("db_transaction_rollback", {"connection_id": connection_id})
+    request = gatekeeper.create_request("db_transaction_rollback", {"connection_id": connection_id})
 
     # Wait for approval
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -254,10 +254,10 @@ async def database_insert(
     placeholders = ", ".join([f":{k}" for k in data.keys()])
     query = f"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
 
-    request = approval_manager.create_request("db_insert", {"table": table, "data": data, "connection_id": connection_id})
+    request = gatekeeper.create_request("db_insert", {"table": table, "data": data, "connection_id": connection_id})
 
     # Wait for approval
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -291,10 +291,10 @@ async def database_update(
     data["_where_value"] = where_value
     query = f"UPDATE {table} SET {set_clause} WHERE {where_column} = :_where_value"
 
-    request = approval_manager.create_request("db_update", {"table": table, "data": data, "where": f"{where_column}={where_value}", "connection_id": connection_id})
+    request = gatekeeper.create_request("db_update", {"table": table, "data": data, "where": f"{where_column}={where_value}", "connection_id": connection_id})
 
     # Wait for approval
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -325,10 +325,10 @@ async def database_delete(
     """
     query = f"DELETE FROM {table} WHERE {where_column} = :where_value"
 
-    request = approval_manager.create_request("db_delete", {"table": table, "where": f"{where_column}={where_value}", "connection_id": connection_id})
+    request = gatekeeper.create_request("db_delete", {"table": table, "where": f"{where_column}={where_value}", "connection_id": connection_id})
 
     # Wait for approval
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 

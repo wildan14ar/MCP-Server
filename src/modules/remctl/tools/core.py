@@ -12,7 +12,7 @@ All command execution requires user approval before running.
 from typing import Optional
 from ..config.session import RemctlSession
 from ..config.tools import tool
-from ...approval import approval_manager
+from ...lib.gatekeeper import gatekeeper
 
 
 @tool(name="server_exec")
@@ -35,10 +35,10 @@ async def execute_ssh_command(
         Command output with stdout, stderr, and return code
     """
     # Create approval request (broadcast to all connected users)
-    request = approval_manager.create_request("server_exec", {"session_id": session_id, "command": command})
+    request = gatekeeper.create_request("server_exec", {"session_id": session_id, "command": command})
 
     # Wait for approval
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 

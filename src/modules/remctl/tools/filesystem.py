@@ -13,7 +13,7 @@ NOTE: All tools require user approval before execution.
 from typing import Optional, List, Dict, Any
 from ..config.session import RemctlSession
 from ..config.tools import tool
-from ...approval import approval_manager
+from ...lib.gatekeeper import gatekeeper
 
 
 @tool(name="server_ls")
@@ -47,10 +47,10 @@ async def list_directory(
         cmd += f" {path}"
 
     # Create approval request
-    request = approval_manager.create_request("server_ls", {"session_id": session_id, "command": cmd})
+    request = gatekeeper.create_request("server_ls", {"session_id": session_id, "command": cmd})
 
     # Wait for approval
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -66,9 +66,9 @@ async def print_working_directory(session_id: str) -> dict:
 
     Requires user approval before execution.
     """
-    request = approval_manager.create_request("server_pwd", {"session_id": session_id})
+    request = gatekeeper.create_request("server_pwd", {"session_id": session_id})
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -86,9 +86,9 @@ async def change_directory(
 
     Requires user approval before execution.
     """
-    request = approval_manager.create_request("server_cd", {"session_id": session_id, "path": path})
+    request = gatekeeper.create_request("server_cd", {"session_id": session_id, "path": path})
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -112,9 +112,9 @@ async def make_directory(
         cmd += " -p"
     cmd += f" {path}"
 
-    request = approval_manager.create_request("server_mkdir", {"session_id": session_id, "path": path})
+    request = gatekeeper.create_request("server_mkdir", {"session_id": session_id, "path": path})
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -142,9 +142,9 @@ async def remove_file_or_dir(
         cmd += " -f"
     cmd += f" {path}"
 
-    request = approval_manager.create_request("server_rm", {"session_id": session_id, "path": path, "recursive": recursive})
+    request = gatekeeper.create_request("server_rm", {"session_id": session_id, "path": path, "recursive": recursive})
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -169,9 +169,9 @@ async def copy_file_or_dir(
         cmd += " -r"
     cmd += f" {source} {destination}"
 
-    request = approval_manager.create_request("server_cp", {"session_id": session_id, "source": source, "destination": destination})
+    request = gatekeeper.create_request("server_cp", {"session_id": session_id, "source": source, "destination": destination})
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -190,9 +190,9 @@ async def move_or_rename(
 
     Requires user approval before execution.
     """
-    request = approval_manager.create_request("server_mv", {"session_id": session_id, "source": source, "destination": destination})
+    request = gatekeeper.create_request("server_mv", {"session_id": session_id, "source": source, "destination": destination})
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -216,9 +216,9 @@ async def read_file_content(
         cmd += " -n"
     cmd += f" {path}"
 
-    request = approval_manager.create_request("server_cat", {"session_id": session_id, "path": path})
+    request = gatekeeper.create_request("server_cat", {"session_id": session_id, "path": path})
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -237,9 +237,9 @@ async def read_file_head(
 
     Requires user approval before execution.
     """
-    request = approval_manager.create_request("server_head", {"session_id": session_id, "path": path, "lines": lines})
+    request = gatekeeper.create_request("server_head", {"session_id": session_id, "path": path, "lines": lines})
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -264,9 +264,9 @@ async def read_file_tail(
         cmd += " -f"
     cmd += f" {path}"
 
-    request = approval_manager.create_request("server_tail", {"session_id": session_id, "path": path, "lines": lines})
+    request = gatekeeper.create_request("server_tail", {"session_id": session_id, "path": path, "lines": lines})
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -284,9 +284,9 @@ async def get_file_info(
 
     Requires user approval before execution.
     """
-    request = approval_manager.create_request("server_file_info", {"session_id": session_id, "path": path})
+    request = gatekeeper.create_request("server_file_info", {"session_id": session_id, "path": path})
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -323,14 +323,14 @@ async def find_files(
     if name_pattern:
         cmd += f" -name '{name_pattern}'"
 
-    request = approval_manager.create_request("server_find", {
+    request = gatekeeper.create_request("server_find", {
         "session_id": session_id,
         "path": path,
         "name_pattern": name_pattern,
         "file_type": file_type
     })
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -363,14 +363,14 @@ async def grep_in_files(
     cmd += f" '{pattern}' {path}"
     cmd += f" | head -n {max_results}"
 
-    request = approval_manager.create_request("server_grep", {
+    request = gatekeeper.create_request("server_grep", {
         "session_id": session_id,
         "pattern": pattern,
         "path": path,
         "recursive": recursive
     })
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 

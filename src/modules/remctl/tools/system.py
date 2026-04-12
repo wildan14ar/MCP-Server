@@ -13,7 +13,7 @@ NOTE: All tools require user approval before execution.
 from typing import Optional, List, Dict, Any
 from ..config.session import RemctlSession
 from ..config.tools import tool
-from ...approval import approval_manager
+from ...lib.gatekeeper import gatekeeper
 
 
 @tool(name="server_whoami")
@@ -23,9 +23,9 @@ async def get_current_user(session_id: str) -> dict:
 
     Requires user approval before execution.
     """
-    request = approval_manager.create_request("server_whoami", {"session_id": session_id})
+    request = gatekeeper.create_request("server_whoami", {"session_id": session_id})
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -40,9 +40,9 @@ async def get_hostname(session_id: str) -> dict:
 
     Requires user approval before execution.
     """
-    request = approval_manager.create_request("server_hostname", {"session_id": session_id})
+    request = gatekeeper.create_request("server_hostname", {"session_id": session_id})
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -57,9 +57,9 @@ async def get_system_info(session_id: str) -> dict:
 
     Requires user approval before execution.
     """
-    request = approval_manager.create_request("server_uname", {"session_id": session_id})
+    request = gatekeeper.create_request("server_uname", {"session_id": session_id})
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -74,9 +74,9 @@ async def get_uptime(session_id: str) -> dict:
 
     Requires user approval before execution.
     """
-    request = approval_manager.create_request("server_uptime", {"session_id": session_id})
+    request = gatekeeper.create_request("server_uptime", {"session_id": session_id})
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -103,9 +103,9 @@ async def list_processes(
     else:
         cmd += " -l"
 
-    request = approval_manager.create_request("server_ps", {"session_id": session_id})
+    request = gatekeeper.create_request("server_ps", {"session_id": session_id})
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -132,9 +132,9 @@ async def get_top_processes(
     else:
         cmd = f"ps aux | head -n {count + 1}"
 
-    request = approval_manager.create_request("server_top", {"session_id": session_id, "count": count, "sort_by": sort_by})
+    request = gatekeeper.create_request("server_top", {"session_id": session_id, "count": count, "sort_by": sort_by})
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -159,9 +159,9 @@ async def get_disk_usage(
     if path:
         cmd += f" {path}"
 
-    request = approval_manager.create_request("server_df", {"session_id": session_id, "path": path})
+    request = gatekeeper.create_request("server_df", {"session_id": session_id, "path": path})
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -176,9 +176,9 @@ async def get_memory_usage(session_id: str) -> dict:
 
     Requires user approval before execution.
     """
-    request = approval_manager.create_request("server_free", {"session_id": session_id})
+    request = gatekeeper.create_request("server_free", {"session_id": session_id})
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -204,9 +204,9 @@ async def get_directory_size(
     cmd += f" --max-depth={max_depth}"
     cmd += f" {path}"
 
-    request = approval_manager.create_request("server_du", {"session_id": session_id, "path": path})
+    request = gatekeeper.create_request("server_du", {"session_id": session_id, "path": path})
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -224,9 +224,9 @@ async def get_network_info(session_id: str) -> dict:
     # Try ip command first, fallback to ifconfig
     cmd = "ip addr show 2>/dev/null || ifconfig"
 
-    request = approval_manager.create_request("server_network", {"session_id": session_id})
+    request = gatekeeper.create_request("server_network", {"session_id": session_id})
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -245,9 +245,9 @@ async def ping_host(
 
     Requires user approval before execution.
     """
-    request = approval_manager.create_request("server_ping", {"session_id": session_id, "host": host})
+    request = gatekeeper.create_request("server_ping", {"session_id": session_id, "host": host})
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -267,9 +267,9 @@ async def kill_process(
     ⚠️ WARNING: This will terminate the process!
     Requires user approval before execution.
     """
-    request = approval_manager.create_request("server_kill", {"session_id": session_id, "pid": pid, "signal": signal})
+    request = gatekeeper.create_request("server_kill", {"session_id": session_id, "pid": pid, "signal": signal})
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -289,9 +289,9 @@ async def kill_process_by_name(
     ⚠️ WARNING: This will terminate all matching processes!
     Requires user approval before execution.
     """
-    request = approval_manager.create_request("server_killall", {"session_id": session_id, "process_name": process_name})
+    request = gatekeeper.create_request("server_killall", {"session_id": session_id, "process_name": process_name})
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -320,13 +320,13 @@ async def manage_service(
     if action not in valid_actions:
         return {"status": "error", "message": f"Invalid action. Use: {', '.join(valid_actions)}"}
 
-    request = approval_manager.create_request("systemctl", {
+    request = gatekeeper.create_request("systemctl", {
         "session_id": session_id,
         "service_name": service_name,
         "action": action
     })
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 
@@ -353,13 +353,13 @@ async def view_system_logs(
     else:
         cmd = f"tail -n {lines} /var/log/syslog 2>/dev/null || tail -n {lines} /var/log/messages"
 
-    request = approval_manager.create_request("server_logs", {
+    request = gatekeeper.create_request("server_logs", {
         "session_id": session_id,
         "service_name": service_name,
         "lines": lines
     })
 
-    approval = await approval_manager.wait_for_approval(request.request_id)
+    approval = await gatekeeper.wait_for_approval(request.request_id)
     if not approval["approved"]:
         return {"status": "rejected", "reason": approval["reason"]}
 

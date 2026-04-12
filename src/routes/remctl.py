@@ -22,7 +22,8 @@ from mcp.server.fastmcp import FastMCP
 from src.modules.remctl.config.session import RemctlSession
 from src.modules.remctl.config.tools import ToolsManager
 from src.modules.remctl.config.skills import SkillsManager
-from src.modules.approval import approval_manager, register_websocket, unregister_websocket
+from src.modules.remctl.tools.session_mgmt import register_session_tools
+from src.lib.gatekeeper import gatekeeper, register_websocket, unregister_websocket, store_credentials, remove_credentials
 
 # MCP instance
 mcp = FastMCP("remctl")
@@ -74,6 +75,13 @@ async def websocket_endpoint(websocket: WebSocket):
                 token_sessions[session.token] = session
                 _token_to_session[session.token] = session
 
+                # Store credentials for AI to use later (NO credentials sent via MCP)
+                store_credentials(session.token, "remctl", {
+                    "user": data.get("user"),
+                    "password": data.get("password"),
+                    "pkey_str": data.get("pkey_str"),
+                })
+
                 await websocket.send_json(
                     {
                         "type": "connected",
@@ -116,9 +124,9 @@ async def websocket_endpoint(websocket: WebSocket):
                 reason = data.get("reason")
 
                 if approved:
-                    approval_manager.approve(request_id)
+                    gatekeeper.approve(request_id)
                 else:
-                    approval_manager.reject(request_id, reason or "User rejected the request")
+                    gatekeeper.reject(request_id, reason or "User rejected the request")
 
                 await websocket.send_json({
                     "type": "approval_response",
@@ -128,7 +136,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
             elif msg_type == "list_pending":
                 # User requests list of pending approvals
-                pending = approval_manager.list_pending()
+                pending = gatekeeper.list_pending()
                 await websocket.send_json({
                     "type": "pending_list",
                     "requests": pending,
@@ -144,6 +152,7 @@ async def websocket_endpoint(websocket: WebSocket):
         if session:
             token_sessions.pop(session.token, None)
             _token_to_session.pop(session.token, None)
+            remove_credentials(session.token)
             session.close()
 
 
@@ -158,6 +167,7 @@ def setup_remctl(app: FastAPI):
     # Register MCP tools (AI can only use existing sessions)
     ToolsManager().get_tools(mcp)
     SkillsManager().get_tools(mcp)
+    register_session_tools(mcp)
 
     # Mount MCP SSE at /remctl/mcp
     app.router.routes.append(Mount("/remctl/mcp", app=mcp.streamable_http_app()))
