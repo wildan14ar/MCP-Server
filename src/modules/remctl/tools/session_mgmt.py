@@ -9,7 +9,7 @@ These tools DO NOT require user approval.
 
 from typing import Optional
 from ..config.session import RemctlSession
-from ...lib.gatekeeper import get_credentials
+from src.lib.gatekeeper import get_credentials
 
 
 async def create_ssh_session(

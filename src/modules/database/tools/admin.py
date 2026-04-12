@@ -14,7 +14,7 @@ NOTE: All admin tools require user approval before execution.
 from typing import Optional, List, Dict, Any
 from ..config.connection import DatabaseConnection
 from ..config.tools import tool
-from ...lib.gatekeeper import gatekeeper
+from src.lib.gatekeeper import gatekeeper
 
 
 @tool(name="db_create_table")

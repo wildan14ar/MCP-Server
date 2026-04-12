@@ -3,16 +3,17 @@ Remctl Module
 Remote Control - Unified SSH session and tools management.
 
 Usage:
-    from src.modules.remctl import setup_remctl
+    from src.routes import setup_remctl
     setup_remctl(app)  # ONE LINE!
-    
+
     # Or import individually:
-    from src.modules.remctl import remctl_app, mcp, register_tools
+    from src.modules.remctl.config.session import RemctlSession
+    from src.modules.remctl.config.tools import ToolsManager
 """
 
-from .config import RemctlSession, SessionResult, SessionInfo
-from .config import ToolsManager, SkillsManager
-from .main import remctl_app, mcp, register_tools, setup_remctl
+from .config.session import RemctlSession, SessionResult, SessionInfo
+from .config.tools import ToolsManager
+from .config.skills import SkillsManager
 
 __all__ = [
     "RemctlSession",
@@ -20,8 +21,4 @@ __all__ = [
     "SessionInfo",
     "ToolsManager",
     "SkillsManager",
-    "remctl_app",
-    "mcp",
-    "register_tools",
-    "setup_remctl",
 ]

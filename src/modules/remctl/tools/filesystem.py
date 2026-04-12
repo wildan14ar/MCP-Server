@@ -13,7 +13,7 @@ NOTE: All tools require user approval before execution.
 from typing import Optional, List, Dict, Any
 from ..config.session import RemctlSession
 from ..config.tools import tool
-from ...lib.gatekeeper import gatekeeper
+from src.lib.gatekeeper import gatekeeper
 
 
 @tool(name="server_ls")

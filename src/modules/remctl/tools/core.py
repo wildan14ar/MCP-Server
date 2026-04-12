@@ -12,7 +12,7 @@ All command execution requires user approval before running.
 from typing import Optional
 from ..config.session import RemctlSession
 from ..config.tools import tool
-from ...lib.gatekeeper import gatekeeper
+from src.lib.gatekeeper import gatekeeper
 
 
 @tool(name="server_exec")
