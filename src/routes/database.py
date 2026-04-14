@@ -270,7 +270,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 _token_to_connection.pop(conn.token, None)
                 _active_websockets.pop(conn.token, None)
                 remove_credentials(conn.token)
-                conn.close()
+                DatabaseConnection.close(conn.connection_id)
             except Exception:
                 pass
 

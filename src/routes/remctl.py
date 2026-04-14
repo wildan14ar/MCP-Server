@@ -61,37 +61,42 @@ async def websocket_endpoint(websocket: WebSocket):
                     )
                     continue
 
-                session = RemctlSession(
-                    host=data.get("host"),
-                    user=data.get("user"),
-                    password=data.get("password"),
-                    pkey_str=data.get("pkey_str"),
-                    port=data.get("port", 22),
-                    on_output=lambda out: asyncio.create_task(
-                        websocket.send_json({"type": "output", "data": out})
-                    ),
-                )
-                session.connect()
-                token_sessions[session.token] = session
-                _token_to_session[session.token] = session
+                try:
+                    session = RemctlSession(
+                        host=data.get("host"),
+                        user=data.get("user"),
+                        password=data.get("password"),
+                        pkey_str=data.get("pkey_str"),
+                        port=data.get("port", 22),
+                        on_output=lambda out: asyncio.create_task(
+                            websocket.send_json({"type": "output", "data": out})
+                        ),
+                    )
+                    session.connect()
+                    token_sessions[session.token] = session
+                    _token_to_session[session.token] = session
 
-                # Store credentials for AI to use later (NO credentials sent via MCP)
-                store_credentials(session.token, "remctl", {
-                    "user": data.get("user"),
-                    "password": data.get("password"),
-                    "pkey_str": data.get("pkey_str"),
-                })
+                    # Store credentials for AI to use later (NO credentials sent via MCP)
+                    store_credentials(session.token, "remctl", {
+                        "user": data.get("user"),
+                        "password": data.get("password"),
+                        "pkey_str": data.get("pkey_str"),
+                    })
 
-                await websocket.send_json(
-                    {
-                        "type": "connected",
-                        "session_id": session.session_id,
-                        "token": session.token,
-                        "host": session.host,
-                        "user": session.user,
-                        "message": "Session created. Share 'session_id' and 'token' with AI to use this session. All AI actions will require your approval."
-                    }
-                )
+                    await websocket.send_json(
+                        {
+                            "type": "connected",
+                            "session_id": session.session_id,
+                            "token": session.token,
+                            "host": session.host,
+                            "user": session.user,
+                            "message": "Session created. Share 'session_id' and 'token' with AI to use this session. All AI actions will require your approval."
+                        }
+                    )
+                except Exception as e:
+                    await websocket.send_json(
+                        {"type": "error", "message": str(e)}
+                    )
 
             elif msg_type == "execute":
                 if not session:
@@ -148,12 +153,12 @@ async def websocket_endpoint(websocket: WebSocket):
     finally:
         # Unregister websocket
         unregister_websocket(websocket)
-        
+
         if session:
             token_sessions.pop(session.token, None)
             _token_to_session.pop(session.token, None)
             remove_credentials(session.token)
-            session.close()
+            RemctlSession.close(session.session_id)
 
 
 def setup_remctl(app: FastAPI):
